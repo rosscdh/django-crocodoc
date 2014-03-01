@@ -11,6 +11,73 @@ import logging
 logger = logging.getLogger('lawpal.services')
 
 
+class CrocdocAttachmentService(object):
+    """
+    Service to manage uploading and general attribs of corcdoc attachments
+    """
+    attachment = None
+    session = None
+
+    def __init__(self, attachment, *args, **kwargs):
+        logger.info('Init CrocdocAttachmentService.__init__ for attachment: {pk}'.format(pk=attachment.pk))
+        self.attachment = attachment
+
+    @property
+    def uuid(self):
+        """
+        Calling this property will initiate an upload of the doc,
+        if it has not already been uploaded (i.e. we have a crocdoc uuid in the json data)
+        """
+        if self.attachment.crocdoc_uuid is None:
+
+            try:
+                uuid = self.upload_document()
+                logger.info('CrocdocAttachmentService.uuid: {uuid}'.format(uuid=uuid))
+
+            except Exception as e:
+                logger.error('CrocdocAttachmentService.uuid: Failed to Generate uuid')
+                raise e
+
+            crocdoc = self.attachment.data.get('crocdoc', {})
+            crocdoc['uuid'] = uuid
+
+            self.attachment.uuid = uuid
+
+            self.attachment.data['crocdoc'] = crocdoc
+            self.attachment.save(update_fields=['uuid', 'data'])
+
+            return uuid
+        else:
+            return self.attachment.crocdoc_uuid
+
+    def session_key(self, **kwargs):
+        if self.session is None:
+            self.session = '123-123-123' if settings.PROJECT_ENVIRONMENT == 'test' else crocodoc.session.create(self.uuid, **kwargs)
+        return self.session
+
+    def upload_document(self):
+        url = self.attachment.get_url()
+        logger.info('Upload file to crocdoc: {url}'.format(url=url))
+        return crocodoc.document.upload(url=url)
+
+    def view_url(self):
+        url = 'http://example.com' if settings.PROJECT_ENVIRONMENT == 'test' else 'https://crocodoc.com/view/{session_key}'.format(session_key=self.session_key())
+        logger.info('provide crocdoc view_url: {url}'.format(url=url))
+        return url
+
+    def remove(self):
+        # delete from crocdoc based on uuid
+        deleted = crocodoc.document.delete(self.attachment.crocdoc_uuid)
+        if deleted:
+            logger.info('Deleted crocdoc file: {pk} - {uuid}'.format(pk=self.attachment.pk, uuid=self.attachment.crocdoc_uuid))
+        else:
+            logger.error('Could not Delete crocdoc file: {pk} - {uuid}'.format(pk=self.attachment.pk, uuid=self.attachment.crocdoc_uuid))
+
+    def process(self):
+        logger.info('Start CrocdocAttachmentService.process')
+        return self.uuid
+
+
 class CrocdocWebhookService(object):
     payload = None
 
