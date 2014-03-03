@@ -1,0 +1,2 @@
+bunch
+-e git+https://github.com/crocodoc/crocodoc-python.git#egg=crocdoc-python
