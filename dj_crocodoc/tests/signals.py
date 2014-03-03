@@ -14,9 +14,9 @@ import data as crocodoc_data
 from dj_crocodoc.models import CrocodocDocument
 import dj_crocodoc.signals as crocodoc_signals
 
-from tempfile import NamedTemporaryFile
-
+import re
 import json
+import httpretty
 
 
 @receiver(crocodoc_signals.crocodoc_comment_create)
@@ -84,7 +84,27 @@ class IncomingSignalTest(TestCase):
     """
     subject = crocodoc_signals.send_to_crocodoc
 
+    @httpretty.activate
     def test_signal_provides_a_new_model(self):
+        #
+        # Crocdoc
+        #
+        httpretty.register_uri(httpretty.POST, "https://crocodoc.com/api/v2/session/create",
+                       body='{"session": i_12345-123_123_123-12345_123}',
+                       status=200)
+        httpretty.register_uri(httpretty.GET, "https://crocodoc.com/api/v2/document/status",
+                       body='{"success": true}',
+                       status=200)
+        httpretty.register_uri(httpretty.POST, "https://crocodoc.com/api/v2/document/upload",
+                       body='{"success": true, "uuid": "b15532bb-c227-40f6-939c-a244d123c717"}',
+                       status=200)
+        httpretty.register_uri(httpretty.POST, "https://crocodoc.com/api/v2/document/delete",
+                       body='{"token": "pRzHhZS4jaGes193db28cwyu", "uuid": "b15532bb-c227-40f6-939c-a244d123c717"}',
+                       status=200)
+        httpretty.register_uri(httpretty.GET, re.compile("https://crocodoc.com/view/(.+)"),
+                       body='This is a document',
+                       status=200)
+
         base_object_attachment = FakeDocumentObject.objects.create(my_document_field='')
 
         self.assertEqual(CrocodocDocument.objects.all().count(), 0)
