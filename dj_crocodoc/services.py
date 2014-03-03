@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from django.contrib.auth.models import User
 
-from .models import CrocodocDocment
+from .models import CrocodocDocument
+
+import signals as crocodoc_signals
 
 from bunch import Bunch
-import signals as crocodoc_signals
 
 import json
 import logging
@@ -68,8 +69,10 @@ class CrocodocService(object):
     def remove(self):
         # delete from crocodoc based on uuid
         deleted = crocodoc.document.delete(self.attachment.crocodoc_uuid)
+
         if deleted:
             logger.info('Deleted crocodoc file: {pk} - {uuid}'.format(pk=self.attachment.pk, uuid=self.attachment.crocodoc_uuid))
+
         else:
             logger.error('Could not Delete crocodoc file: {pk} - {uuid}'.format(pk=self.attachment.pk, uuid=self.attachment.crocodoc_uuid))
 
@@ -81,21 +84,25 @@ class CrocodocService(object):
 class CrocodocWebhookService(object):
     payload = None
 
-    def __init__(self, payload=payload, *args, **kwargs):
+    def __init__(self, payload, *args, **kwargs):
         self.user = kwargs.get('user')
         self.payload = json.loads(payload)
         self.items = [Bunch(**i) for i in self.payload]
 
     def process(self):
         page = None
+
         for c, i in enumerate(self.items):
-            #print '{num}: Item: {i}'.format(num=c, i=i)
+
             event = i.get('event')
             event_type = i.get('type')
+
             if i.get('page') is not None:
                 page = i.get('page')
 
-            logger.info("{event} is of type {event_type} on page: {page}".format(event_type=event_type, event=event, page=page))
+            logger.info("{event} is of type {event_type} on page: {page}".format(event_type=event_type,
+                                                                                 event=event,
+                                                                                 page=page))
 
             if event == 'comment.create':
                 i = CrocodocCommentCreateEvent(page=page, **i)
@@ -104,6 +111,7 @@ class CrocodocWebhookService(object):
                 i = CrocodocCommentDeleteEvent(**i)
 
             elif event in ['annotation.create', 'annotation.delete']:
+
                 if event_type == 'textbox':
                     i = CrocodocAnnotationTextboxEvent(**i)
 
@@ -116,8 +124,10 @@ class CrocodocWebhookService(object):
                 elif event_type == 'drawing':
                     i = CrocodocAnnotationDrawingEvent(**i)
 
+                elif event_type == 'point':
+                    i = CrocodocAnnotationPointEvent(**i)
 
-            i.process() if hasattr(i, 'process') else None
+            return i.process(sender=self) if hasattr(i, 'process') else None
 
 
 class CrocodocBaseEvent(Bunch):
@@ -137,7 +147,7 @@ class CrocodocBaseEvent(Bunch):
 
     def __init__(self, *args, **kwargs):
         super(CrocodocBaseEvent, self).__init__(*args, **kwargs)
-        self.__dict__.update(kwargs)
+        self.__dict__.update(kwargs)  # @TODO ugly ugly ugly fix this
 
     @property
     def user(self):
@@ -151,7 +161,13 @@ class CrocodocBaseEvent(Bunch):
     @property
     def attachment(self):
         if self._attachment is None:
-            self._attachment = Attachment.objects.get(uuid=self.doc)
+            try:
+
+                self._attachment = CrocodocDocument.objects.get(uuid=str(self.doc))  # must call str to make filter happen
+
+            except CrocodocDocument.DoesNotExist:
+                logger.critical('CrocodocDocument.DoesNotExist: %s' % self.doc)
+
         return self._attachment
 
     @property
@@ -161,48 +177,67 @@ class CrocodocBaseEvent(Bunch):
         else:
             return self._verb
 
-    def process(self):
-        try:
+    def process(self, sender):
+        # try:
+        document = self.attachment
+        target = filename = None
 
-            self.signal.send(verb=self.verb,
-                             action_object=self.attachment, 
-                             target=self.attachment.todo,
-                             attachment_name=self.attachment.filename,
-                             **self.toDict())
+        if document is not None:
+            target = document.source_object
+            #
+            # We allow the fieldname to be variable and is specified at the model
+            # level by setting object_attachment_fieldname but default to attachment
+            #
+            filename = getattr(target, document.object_attachment_fieldname, 'attachment').name
 
-        except Exception as e:
-            logger.error('There was an exception with the CrocodocWebhookService: {error}'.format(error=e))
+            self.signal.send(sender=sender,
+                             verb=self.verb,
+                             action_object=document,
+                             target=target,
+                             attachment_name=filename)
+                             #**self.toDict())
+            logger.info('Send signal: {signal} {verb}'.format(signal=self.signal.__class__.__name__, verb=self.verb))
+            return True
+
+        logger.error('No document could be found by that id: {doc}'.format(doc=str(self.doc)))
+        return False
 
 
 class CrocodocCommentCreateEvent(CrocodocBaseEvent):
     signal = crocodoc_signals.crocodoc_comment_create
-    _verb = 'Commented on an Attachment'
+    _verb = 'Commented on an Document'
 
 
 class CrocodocCommentDeleteEvent(CrocodocBaseEvent):
     signal = crocodoc_signals.crocodoc_comment_delete
-    _verb = 'Deleted a Commented on an Attachment'
+    _verb = 'Deleted a Commented on an Document'
 
 
 class CrocodocAnnotationHighlightEvent(CrocodocBaseEvent):
     signal = crocodoc_signals.crocodoc_annotation_highlight
-    _verb = 'Hilighted some text on an Attachment'
-    _deleted_verb = 'Deleted a Hilighted of some text on an Attachment'
+    _verb = 'Hilighted some text on an Document'
+    _deleted_verb = 'Deleted a Hilighted of some text on an Document'
 
 
 class CrocodocAnnotationStrikeoutEvent(CrocodocBaseEvent):
     signal = crocodoc_signals.crocodoc_annotation_strikeout
-    _verb = 'Struck out some text on an Attachment'
-    _deleted_verb = 'Deleted the Strikeout of some text on an Attachment'
+    _verb = 'Struck out some text on an Document'
+    _deleted_verb = 'Deleted the Strikeout of some text on an Document'
 
 
 class CrocodocAnnotationTextboxEvent(CrocodocBaseEvent):
     signal = crocodoc_signals.crocodoc_annotation_textbox
-    _verb = 'Added a text element on an Attachment'
-    _deleted_verb = 'Deleted a text element on an Attachment'
+    _verb = 'Added a text element on an Document'
+    _deleted_verb = 'Deleted a text element on an Document'
 
 
 class CrocodocAnnotationDrawingEvent(CrocodocBaseEvent):
     signal = crocodoc_signals.crocodoc_annotation_drawing
-    _verb = 'Added a drawing element on an Attachment'
-    _deleted_verb = 'Deleted a drawing element on an Attachment'
+    _verb = 'Added a drawing element on an Document'
+    _deleted_verb = 'Deleted a drawing element on an Document'
+
+
+class CrocodocAnnotationPointEvent(CrocodocBaseEvent):
+    signal = crocodoc_signals.crocodoc_annotation_point
+    _verb = 'Added a point element to a Document'
+    _deleted_verb = 'Deleted a point element on an Document'

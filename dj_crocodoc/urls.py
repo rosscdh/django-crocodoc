@@ -6,5 +6,5 @@ from .views import CrocdocCallbackView
 
 
 urlpatterns = patterns('',
-    url(r'^webhook/$', csrf_exempt(CrocdocCallbackView.as_view()), name='callback'),
+    url(r'^webhook/$', csrf_exempt(CrocdocCallbackView.as_view()), name='crocodoc_webhook_callback'),
 )

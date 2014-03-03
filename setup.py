@@ -21,6 +21,9 @@ setup(
     packages=['dj_crocodoc'],
     install_requires = [
         'crocodoc',
+        'django-braces',
+        'django-jsonfield',
+        'django-uuidfield',
         'bunch',
     ]
 )
