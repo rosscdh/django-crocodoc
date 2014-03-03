@@ -21,14 +21,14 @@ settings.configure(DEBUG = True,
                                      'django.contrib.contenttypes',
                                      'django.contrib.sessions',
                                      'django.contrib.admin',
-                                     'dj_crocdoc',
-                                     'dj_crocdoc.tests',))
+                                     'dj_crocodoc',
+                                     'dj_crocodoc.tests',))
 
 
 from django.test.simple import DjangoTestSuiteRunner
 
 call_command('syncdb', interactive=False)
 
-failures = DjangoTestSuiteRunner().run_tests(['crocdoc',], verbosity=1)
+failures = DjangoTestSuiteRunner().run_tests(['dj_crocodoc',], verbosity=1)
 if failures:
     sys.exit(failures)
