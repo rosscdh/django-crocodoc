@@ -9,7 +9,7 @@ from jsonfield import JSONField
 
 
 class CrocodocDocument(models.Model):
-    uuid = UUIDField(blank=True, null=True, db_index=True)
+    uuid = UUIDField(hyphenate=True, blank=True, null=True, db_index=True)
     # content type of the object, used to do lookups as .source_object
     content_object_type = models.ForeignKey('contenttypes.ContentType', db_index=True)
     # id of the specific object

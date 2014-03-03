@@ -64,7 +64,6 @@ class WebhookTest(BaseContentProvider):
 
     def test_comment_create(self):
         resp = self.send(data=crocodoc_data.CROCODOC_COMMENT_CREATE)
-
         self.assertEqual(cache.get('test_crocodoc_webhook_event_recieved'), ['target', 'signal', 'verb', 'attachment_name', 'document', 'sender'])
         self.assertEqual(json.loads(resp.content), {"details": True})
 
@@ -79,24 +78,24 @@ class WebhookTest(BaseContentProvider):
         self.assertEqual(json.loads(resp.content), {"details": True})
 
 
-class IncomingSignalTest(TestCase):
-    """
-    Test we can issue a signal and have that signal provide us with an appropriate model
-    """
-    subject = crocodoc_signals.send_to_crocodoc
+# class IncomingSignalTest(TestCase):
+#     """
+#     Test we can issue a signal and have that signal provide us with an appropriate model
+#     """
+#     subject = crocodoc_signals.send_to_crocodoc
 
-    def test_signal_provides_a_new_model(self):
-        base_object_attachment = FakeDocumentObject.objects.create(my_document_field='')
+#     def test_signal_provides_a_new_model(self):
+#         base_object_attachment = FakeDocumentObject.objects.create(my_document_field='')
 
-        self.assertEqual(CrocodocDocument.objects.all().count(), 0)
+#         self.assertEqual(CrocodocDocument.objects.all().count(), 0)
 
-        self.subject.send(sender=self, document_object=base_object_attachment, app_label='tests', field_name='my_document_field')
+#         self.subject.send(sender=self, document_object=base_object_attachment, app_label='tests', field_name='my_document_field')
 
-        # Success, we Created a new CrocodocDocument object from the signal
-        self.assertEqual(CrocodocDocument.objects.all().count(), 1)
-        obj = CrocodocDocument.objects.all().first()
+#         # Success, we Created a new CrocodocDocument object from the signal
+#         self.assertEqual(CrocodocDocument.objects.all().count(), 1)
+#         obj = CrocodocDocument.objects.all().first()
 
-        self.assertEqual(obj.uuid, None)  # as we have yet to call the upload process on it
-        self.assertEqual(obj.content_object_type, ContentType.objects.get(model='fakedocumentobject', app_label='tests'))
-        self.assertEqual(obj.object_id, 1)
-        self.assertEqual(obj.object_attachment_fieldname, 'my_document_field')
+#         self.assertEqual(obj.uuid, None)  # as we have yet to call the upload process on it
+#         self.assertEqual(obj.content_object_type, ContentType.objects.get(model='fakedocumentobject', app_label='tests'))
+#         self.assertEqual(obj.object_id, 1)
+#         self.assertEqual(obj.object_attachment_fieldname, 'my_document_field')
