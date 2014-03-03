@@ -1,84 +1,12 @@
 # -*- coding: utf-8 -*-
 from django.contrib.auth.models import User
 
-from .models import CrocodocDocument
-
 import signals as crocodoc_signals
-
-from bunch import Bunch
 
 import json
 import logging
+from bunch import Bunch
 logger = logging.getLogger('django.request')
-
-
-class CrocodocService(object):
-    """
-    Service to manage uploading and general attribs of corcdoc attachments
-    """
-    attachment = None
-    session = None
-
-    def __init__(self, attachment, *args, **kwargs):
-        logger.info('Init CrocodocAttachmentService.__init__ for attachment: {pk}'.format(pk=attachment.pk))
-        self.attachment = attachment
-
-    @property
-    def uuid(self):
-        """
-        Calling this property will initiate an upload of the doc,
-        if it has not already been uploaded (i.e. we have a crocodoc uuid in the json data)
-        """
-        if self.attachment.crocodoc_uuid is None:
-
-            try:
-                uuid = self.upload_document()
-                logger.info('CrocodocAttachmentService.uuid: {uuid}'.format(uuid=uuid))
-
-            except Exception as e:
-                logger.error('CrocodocAttachmentService.uuid: Failed to Generate uuid')
-                raise e
-
-            crocodoc = self.attachment.data.get('crocodoc', {})
-            crocodoc['uuid'] = uuid
-
-            self.attachment.uuid = uuid
-
-            self.attachment.data['crocodoc'] = crocodoc
-            self.attachment.save(update_fields=['uuid', 'data'])
-
-            return uuid
-        else:
-            return self.attachment.crocodoc_uuid
-
-    def session_key(self, **kwargs):
-        if self.session is None:
-            self.session = '123-123-123' if settings.PROJECT_ENVIRONMENT == 'test' else crocodoc.session.create(self.uuid, **kwargs)
-        return self.session
-
-    def upload_document(self):
-        url = self.attachment.get_url()
-        logger.info('Upload file to crocodoc: {url}'.format(url=url))
-        return crocodoc.document.upload(url=url)
-
-    def view_url(self):
-        url = 'http://example.com' if settings.PROJECT_ENVIRONMENT == 'test' else 'https://crocodoc.com/view/{session_key}'.format(session_key=self.session_key())
-        logger.info('provide crocodoc view_url: {url}'.format(url=url))
-        return url
-
-    def remove(self):
-        # delete from crocodoc based on uuid
-        deleted = crocodoc.document.delete(self.attachment.crocodoc_uuid)
-
-        if deleted:
-            logger.info('Deleted crocodoc file: {pk} - {uuid}'.format(pk=self.attachment.pk, uuid=self.attachment.crocodoc_uuid))
-
-        else:
-            logger.error('Could not Delete crocodoc file: {pk} - {uuid}'.format(pk=self.attachment.pk, uuid=self.attachment.crocodoc_uuid))
-
-    def process(self):
-        logger.info('Start CrocodocAttachmentService.process')
-        return self.uuid
 
 
 class CrocodocWebhookService(object):
@@ -161,6 +89,7 @@ class CrocodocBaseEvent(Bunch):
     @property
     def attachment(self):
         if self._attachment is None:
+            from .models import CrocodocDocument
             try:
 
                 self._attachment = CrocodocDocument.objects.get(uuid=str(self.doc))  # must call str to make filter happen
@@ -192,7 +121,7 @@ class CrocodocBaseEvent(Bunch):
 
             self.signal.send(sender=sender,
                              verb=self.verb,
-                             action_object=document,
+                             document=document,
                              target=target,
                              attachment_name=filename)
                              #**self.toDict())
