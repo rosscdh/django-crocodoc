@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
+from . import CROCDOC_API_KEY
 import logging
 import crocodoc as CROCODOC_BASE_SERVICE
 logger = logging.getLogger('django.request')
+
+
+CROCODOC_BASE_SERVICE.api_token = CROCDOC_API_KEY
 
 
 class CrocodocService(object):
