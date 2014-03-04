@@ -1,12 +1,40 @@
 # -*- coding: utf-8 -*-
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 
+from .models import CrocodocDocument
 import signals as crocodoc_signals
 
 import json
 import logging
 from bunch import Bunch
 logger = logging.getLogger('django.request')
+
+
+class CrocoDocConnectService(object):
+    """
+    Service to setup a crocodoc object
+    """
+    obj = None
+    is_new = None
+
+    def __init__(self, document_object, app_label, field_name='attachment', **kwargs):
+        upload = kwargs.get('upload_immediately', False)
+        #
+        # Get the content_type of the passed in model
+        #
+        content_type = ContentType.objects.get(model=document_object.__class__.__name__.lower(),
+                                               app_label='tests')
+        #
+        # Get or Create a new Crocodoc object associated with the document_object passed in
+        #
+        self.obj, self.is_new = CrocodocDocument.objects.get_or_create(content_object_type=content_type,
+                                                                       object_id=document_object.pk,
+                                                                       object_attachment_fieldname=field_name)
+        if upload in [True, 'true', 1, '1']:
+            # cause an upload to happen
+            self.obj.crocodoc_service.uuid
+
 
 
 class CrocodocWebhookService(object):

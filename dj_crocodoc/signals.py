@@ -3,7 +3,6 @@
 Webhook signals
 """
 from django.dispatch import Signal, receiver
-from django.contrib.contenttypes.models import ContentType
 
 #
 # Incoming events
@@ -23,18 +22,14 @@ crocodoc_annotation_point = Signal(providing_args=['verb', 'document', 'target',
 
 
 @receiver(send_to_crocodoc)
-def on_send_to_crocdoc(sender, document_object, app_label, field_name='attachment', **kwargs):
-    from .models import CrocodocDocument
-    #
-    # Get the content_type of the passed in model
-    #
-    content_type = ContentType.objects.get(model=document_object.__class__.__name__.lower(),
-                                           app_label='tests')
-    #
-    # Get or Create a new Crocodoc object associated with the document_object passed in
-    #
-    obj, is_new = CrocodocDocument.objects.get_or_create(content_object_type=content_type,
-                                                         object_id=document_object.pk,
-                                                         object_attachment_fieldname=field_name)
-    # cause an upload to happen
-    obj.crocodoc_service.uuid
+def on_send_to_crocdoc(sender, document_object, app_label, field_name='attachment', upload_immediately=True, **kwargs):
+    """
+    Signal to create a crocodoc object
+    """
+    from .services import CrocoDocConnectService
+    kwargs.update({'upload_immediately': upload_immediately})
+
+    service = CrocoDocConnectService(document_object=document_object,
+                              app_label=app_label,
+                              field_name=field_name,
+                              **kwargs)

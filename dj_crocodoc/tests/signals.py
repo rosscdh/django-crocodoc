@@ -8,13 +8,14 @@ from django.test import TestCase, Client
 from django.core.urlresolvers import reverse
 from django.contrib.contenttypes.models import ContentType
 
+from ..services import CrocoDocConnectService
+
 from .models import FakeDocumentObject
 import data as crocodoc_data
 
 from dj_crocodoc.models import CrocodocDocument
 import dj_crocodoc.signals as crocodoc_signals
 
-import re
 import json
 import httpretty
 
@@ -30,6 +31,17 @@ def test_crocodoc_webhook_event_recieved(**kwargs):
     Test signal listner to handle the signal fired event
     """
     cache.set('test_crocodoc_webhook_event_recieved', kwargs.keys())
+
+
+def _ensure_object_has_correct_values(clazz, obj):
+    """
+    Test we have the right standard values
+    used in all tests below
+    """
+    clazz.assertEqual(obj.content_object_type, ContentType.objects.get(model='fakedocumentobject', app_label='tests'))
+    clazz.assertEqual(obj.object_id, 1)
+    clazz.assertEqual(obj.object_attachment_fieldname, 'my_document_field')
+    clazz.assertEqual(type(obj.source_object), FakeDocumentObject)  # should return the base object that created the request
 
 
 class BaseContentProvider(TestCase):
@@ -89,33 +101,86 @@ class IncomingSignalTest(TestCase):
         #
         # Crocdoc
         #
-        httpretty.register_uri(httpretty.POST, "https://crocodoc.com/api/v2/session/create",
-                       body='{"session": i_12345-123_123_123-12345_123}',
-                       status=200)
-        httpretty.register_uri(httpretty.GET, "https://crocodoc.com/api/v2/document/status",
-                       body='{"success": true}',
-                       status=200)
         httpretty.register_uri(httpretty.POST, "https://crocodoc.com/api/v2/document/upload",
                        body='{"success": true, "uuid": "b15532bb-c227-40f6-939c-a244d123c717"}',
                        status=200)
-        httpretty.register_uri(httpretty.POST, "https://crocodoc.com/api/v2/document/delete",
-                       body='{"token": "pRzHhZS4jaGes193db28cwyu", "uuid": "b15532bb-c227-40f6-939c-a244d123c717"}',
-                       status=200)
-        httpretty.register_uri(httpretty.GET, re.compile("https://crocodoc.com/view/(.+)"),
-                       body='This is a document',
-                       status=200)
 
-        base_object_attachment = FakeDocumentObject.objects.create(my_document_field='')
+
+        base_object_attachment = FakeDocumentObject.objects.create(my_document_field='./test.pdf')
 
         self.assertEqual(CrocodocDocument.objects.all().count(), 0)
 
-        self.subject.send(sender=self, document_object=base_object_attachment, app_label='tests', field_name='my_document_field')
+        self.subject.send(sender=self,
+                          document_object=base_object_attachment,
+                          app_label='tests',
+                          field_name='my_document_field')
 
         # Success, we Created a new CrocodocDocument object from the signal
         self.assertEqual(CrocodocDocument.objects.all().count(), 1)
         obj = CrocodocDocument.objects.all().first()
 
-        self.assertEqual(obj.uuid, None)  # as we have yet to call the upload process on it
-        self.assertEqual(obj.content_object_type, ContentType.objects.get(model='fakedocumentobject', app_label='tests'))
-        self.assertEqual(obj.object_id, 1)
-        self.assertEqual(obj.object_attachment_fieldname, 'my_document_field')
+        self.assertEqual(str(obj.uuid), 'b15532bb-c227-40f6-939c-a244d123c717')  # as we have yet to call the upload process on it
+        _ensure_object_has_correct_values(clazz=self, obj=obj)
+
+
+class CrocoDocConnectServiceTest(TestCase):
+    """
+    Test we can use the CrocoDocConnectService directly
+    """
+    subject = CrocoDocConnectService
+
+    @httpretty.activate
+    def test_service_provides_a_model_with_upload_immediately_false(self):
+        """
+        Note the CrocoDocConnectService will not upload_immediately unless u
+        specify upload_immediately=True
+        """
+        #
+        # Crocdoc
+        #
+        httpretty.register_uri(httpretty.POST, "https://crocodoc.com/api/v2/document/upload",
+                       body='{"success": true, "uuid": "b15532bb-c227-40f6-939c-a244d123c717"}',
+                       status=200)
+
+        base_object_attachment = FakeDocumentObject.objects.create(my_document_field='./test.pdf')
+
+        self.assertEqual(CrocodocDocument.objects.all().count(), 0)
+
+        self.subject(document_object=base_object_attachment, app_label='tests', field_name='my_document_field')
+
+        # Success, we Created a new CrocodocDocument object from the signal
+        self.assertEqual(CrocodocDocument.objects.all().count(), 1)
+        obj = CrocodocDocument.objects.all().first()
+
+        self.assertEqual(obj.uuid, None)  # Service does not upload right away
+        _ensure_object_has_correct_values(clazz=self, obj=obj)
+
+    @httpretty.activate
+    def test_service_provides_a_model_with_upload_immediately_true(self):
+        """
+        Note the CrocoDocConnectService will not upload_immediately unless u
+        specify upload_immediately=True
+        """
+        #
+        # Crocdoc
+        #
+        httpretty.register_uri(httpretty.POST, "https://crocodoc.com/api/v2/document/upload",
+                       body='{"success": true, "uuid": "b15532bb-c227-40f6-939c-a244d123c717"}',
+                       status=200)
+
+        base_object_attachment = FakeDocumentObject.objects.create(my_document_field='./test.pdf')
+
+        self.assertEqual(CrocodocDocument.objects.all().count(), 0)
+
+        service = self.subject(document_object=base_object_attachment,
+                               app_label='tests',
+                               field_name='my_document_field',
+                               upload_immediately=True)
+
+        # Success, we Created a new CrocodocDocument object from the signal
+        self.assertEqual(CrocodocDocument.objects.all().count(), 1)
+        obj = CrocodocDocument.objects.all().first()
+        import pdb;pdb.set_trace()
+        self.assertEqual(str(obj.uuid), 'b15532bb-c227-40f6-939c-a244d123c717')  # Service does not upload right away
+        _ensure_object_has_correct_values(clazz=self, obj=obj)
+

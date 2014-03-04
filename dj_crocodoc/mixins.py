@@ -57,8 +57,13 @@ class CrocodocService(object):
         logger.info('Upload file to crocodoc: {url}'.format(url=url))
         return CROCODOC_BASE_SERVICE.document.upload(url=url)
 
-    def view_url(self):
-        url = 'http://example.com' 'https://crocodoc.com/view/{session_key}'.format(session_key=self.session_key())
+    def view_url(self, **kwargs):
+        """
+        Please see: https://crocodoc.com/docs/api/#session-create
+        for a list of the session kwargs that are accepted
+        filter=[1,5,3,7] a list of user ids that can see the document commments
+        """
+        url = 'https://crocodoc.com/view/{session_key}'.format(session_key=self.session_key(**kwargs))
         logger.info('provide crocodoc view_url: {url}'.format(url=url))
         return url
 
