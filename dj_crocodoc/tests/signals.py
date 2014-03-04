@@ -180,7 +180,7 @@ class CrocoDocConnectServiceTest(TestCase):
         # Success, we Created a new CrocodocDocument object from the signal
         self.assertEqual(CrocodocDocument.objects.all().count(), 1)
         obj = CrocodocDocument.objects.all().first()
-        import pdb;pdb.set_trace()
+
         self.assertEqual(str(obj.uuid), 'b15532bb-c227-40f6-939c-a244d123c717')  # Service does not upload right away
         _ensure_object_has_correct_values(clazz=self, obj=obj)
 
