@@ -24,7 +24,7 @@ class CrocoDocConnectService(object):
         # Get the content_type of the passed in model
         #
         content_type = ContentType.objects.get(model=document_object.__class__.__name__.lower(),
-                                               app_label='tests')
+                                               app_label=app_label)
         #
         # Get or Create a new Crocodoc object associated with the document_object passed in
         #
