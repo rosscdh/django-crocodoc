@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
+
 from . import CROCDOC_API_KEY
+
 import logging
 import crocodoc as CROCODOC_BASE_SERVICE
 logger = logging.getLogger('django.request')
@@ -57,9 +61,25 @@ class CrocodocService(object):
         return self.session
 
     def upload_document(self):
+        validate = URLValidator()
         url = self.attachment.get_url()
-        logger.info('Upload file to crocodoc: {url}'.format(url=url))
-        return CROCODOC_BASE_SERVICE.document.upload(url=url)
+
+        try:
+            #
+            # validate taht we are using a url
+            #
+            validate(url)
+            logger.info('Upload url:file to crocodoc: {url}'.format(url=url))
+            return CROCODOC_BASE_SERVICE.document.upload(url=url)
+
+        except ValidationError, e:
+            #
+            # was not a url is a patch
+            #
+            logger.info('Upload file to crocodoc: {url}'.format(url=url))
+            return CROCODOC_BASE_SERVICE.document.upload(file=open(url, 'r'))
+
+        
 
     def view_url(self, **kwargs):
         """
