@@ -3,7 +3,7 @@ from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 
 from . import CROCDOC_API_KEY
-
+import codecs
 import logging
 import crocodoc as CROCODOC_BASE_SERVICE
 logger = logging.getLogger('django.request')
@@ -54,8 +54,10 @@ class CrocodocService(object):
         return crocodoc_uuid
 
     def session_key(self, **kwargs):
-        if self.session is None:
+        #if self.session is None:
+        if 1:
             self.session = CROCODOC_BASE_SERVICE.session.create(self.uuid, **kwargs)
+            logger.info('Session start:crocodoc: {session}'.format(session=self.session))
         return self.session
 
     def upload_document(self):
@@ -75,7 +77,7 @@ class CrocodocService(object):
             # was not a url is a patch
             #
             logger.info('Upload file to crocodoc: {url}'.format(url=url))
-            return CROCODOC_BASE_SERVICE.document.upload(file=open(url, 'r'))
+            return CROCODOC_BASE_SERVICE.document.upload(file=codecs.open(url, mode='r', encoding="ISO8859-1"))
 
         
 

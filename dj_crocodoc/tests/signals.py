@@ -2,6 +2,7 @@
 """
 Webhook signals
 """
+from django.conf import settings
 from django.core.cache import cache
 from django.dispatch import receiver
 from django.test import TestCase, Client
@@ -16,9 +17,11 @@ import data as crocodoc_data
 from dj_crocodoc.models import CrocodocDocument
 import dj_crocodoc.signals as crocodoc_signals
 
+import os
 import json
 import httpretty
 
+TEST_PDF_PATH = os.path.join(os.path.dirname(__file__), 'test.pdf')
 
 @receiver(crocodoc_signals.crocodoc_comment_create)
 @receiver(crocodoc_signals.crocodoc_comment_delete)
@@ -106,7 +109,7 @@ class IncomingSignalTest(TestCase):
                        status=200)
 
 
-        base_object_attachment = FakeDocumentObject.objects.create(my_document_field='./test.pdf')
+        base_object_attachment = FakeDocumentObject.objects.create(my_document_field=TEST_PDF_PATH)
 
         self.assertEqual(CrocodocDocument.objects.all().count(), 0)
 
@@ -142,7 +145,7 @@ class CrocoDocConnectServiceTest(TestCase):
                        body='{"success": true, "uuid": "b15532bb-c227-40f6-939c-a244d123c717"}',
                        status=200)
 
-        base_object_attachment = FakeDocumentObject.objects.create(my_document_field='./test.pdf')
+        base_object_attachment = FakeDocumentObject.objects.create(my_document_field=TEST_PDF_PATH)
 
         self.assertEqual(CrocodocDocument.objects.all().count(), 0)
 
@@ -168,8 +171,8 @@ class CrocoDocConnectServiceTest(TestCase):
                        body='{"success": true, "uuid": "b15532bb-c227-40f6-939c-a244d123c717"}',
                        status=200)
 
-        base_object_attachment = FakeDocumentObject.objects.create(my_document_field='./test.pdf')
-
+        base_object_attachment = FakeDocumentObject.objects.create(my_document_field=TEST_PDF_PATH)
+        #import pdb;pdb.set_trace()
         self.assertEqual(CrocodocDocument.objects.all().count(), 0)
 
         service = self.subject(document_object=base_object_attachment,
