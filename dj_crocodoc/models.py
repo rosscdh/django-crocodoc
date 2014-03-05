@@ -23,7 +23,7 @@ class CrocodocDocument(models.Model):
 
     @property
     def crocodoc_uuid(self):
-        return self.data.get('crocdoc', {}).get('uuid')
+        return self.data.get('crocodoc', {}).get('uuid')
 
     def get_url(self):
         return getattr(self.source_object, self.object_attachment_fieldname, 'attachment').name

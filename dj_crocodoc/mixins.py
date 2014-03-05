@@ -51,8 +51,6 @@ class CrocodocService(object):
             self.attachment.data['crocodoc'] = crocodoc_data
             self.attachment.save(update_fields=['uuid', 'data'])
 
-            return crocodoc_uuid
-
         return crocodoc_uuid
 
     def session_key(self, **kwargs):
