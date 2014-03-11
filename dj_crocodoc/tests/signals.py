@@ -2,7 +2,15 @@
 """
 Webhook signals
 """
+#
+# Required for reading files
+#
+import sys;
+reload(sys);
+sys.setdefaultencoding("utf8")
+
 from django.conf import settings
+from django.core.files import File
 from django.core.cache import cache
 from django.dispatch import receiver
 from django.test import TestCase, Client
@@ -19,9 +27,20 @@ import dj_crocodoc.signals as crocodoc_signals
 
 import os
 import json
+import codecs
 import httpretty
 
 TEST_PDF_PATH = os.path.join(os.path.dirname(__file__), 'test.pdf')
+
+def GET_FAKE_DOC_OBJECT():
+    base_object_attachment = FakeDocumentObject()
+
+    with codecs.open(TEST_PDF_PATH, mode='r', encoding="ISO8859-1") as filename:
+        base_object_attachment.my_document_field.save('test.pdf', File(filename))
+    base_object_attachment.save()
+
+    return base_object_attachment
+
 
 @receiver(crocodoc_signals.crocodoc_comment_create)
 @receiver(crocodoc_signals.crocodoc_comment_delete)
@@ -109,7 +128,7 @@ class IncomingSignalTest(TestCase):
                        status=200)
 
 
-        base_object_attachment = FakeDocumentObject.objects.create(my_document_field=TEST_PDF_PATH)
+        base_object_attachment = GET_FAKE_DOC_OBJECT()
 
         self.assertEqual(CrocodocDocument.objects.all().count(), 0)
 
@@ -145,7 +164,7 @@ class CrocoDocConnectServiceTest(TestCase):
                        body='{"success": true, "uuid": "b15532bb-c227-40f6-939c-a244d123c717"}',
                        status=200)
 
-        base_object_attachment = FakeDocumentObject.objects.create(my_document_field=TEST_PDF_PATH)
+        base_object_attachment = GET_FAKE_DOC_OBJECT()
 
         self.assertEqual(CrocodocDocument.objects.all().count(), 0)
 
@@ -171,8 +190,8 @@ class CrocoDocConnectServiceTest(TestCase):
                        body='{"success": true, "uuid": "b15532bb-c227-40f6-939c-a244d123c717"}',
                        status=200)
 
-        base_object_attachment = FakeDocumentObject.objects.create(my_document_field=TEST_PDF_PATH)
-        #import pdb;pdb.set_trace()
+        base_object_attachment = GET_FAKE_DOC_OBJECT()
+
         self.assertEqual(CrocodocDocument.objects.all().count(), 0)
 
         service = self.subject(document_object=base_object_attachment,

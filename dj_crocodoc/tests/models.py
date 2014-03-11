@@ -6,4 +6,4 @@ from django.db import models
 
 
 class FakeDocumentObject(models.Model):
-    my_document_field = models.FileField(upload_to='/tmp/')
+    my_document_field = models.FileField(upload_to='testing/', blank=True)

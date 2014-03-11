@@ -4,7 +4,6 @@ from django.core.files.storage import default_storage
 from django.core.exceptions import ValidationError
 
 from . import CROCDOC_API_KEY
-import codecs
 import logging
 import crocodoc as CROCODOC_BASE_SERVICE
 logger = logging.getLogger('django.request')
