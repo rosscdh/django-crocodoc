@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.core.validators import URLValidator
+from django.core.files.storage import default_storage
 from django.core.exceptions import ValidationError
 
 from . import CROCDOC_API_KEY
@@ -70,6 +71,9 @@ class CrocodocService(object):
             #
             validate(url)
             logger.info('Upload url:file to crocodoc: {url}'.format(url=url))
+            #
+            # @TODO download the file locally? instead of trying to upload as a url?
+            #
             return CROCODOC_BASE_SERVICE.document.upload(url=url)
 
         except ValidationError, e:
@@ -77,7 +81,8 @@ class CrocodocService(object):
             # was not a url is a patch
             #
             logger.info('Upload file to crocodoc: {url}'.format(url=url))
-            return CROCODOC_BASE_SERVICE.document.upload(file=codecs.open(url, mode='r', encoding="ISO8859-1"))
+            #return CROCODOC_BASE_SERVICE.document.upload(file=codecs.open(url, mode='r', encoding="ISO8859-1"))
+            return CROCODOC_BASE_SERVICE.document.upload(file=default_storage.open(url))
 
         
 

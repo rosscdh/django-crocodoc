@@ -26,7 +26,10 @@ class CrocodocDocument(models.Model):
         return self.data.get('crocodoc', {}).get('uuid')
 
     def get_url(self):
-        return getattr(self.source_object, self.object_attachment_fieldname, 'attachment').url
+        """
+        Return the local name of the object as it will probably be downloaded from there
+        """
+        return getattr(self.source_object, self.object_attachment_fieldname, 'attachment').name
 
     @property
     def crocodoc_service(self):
