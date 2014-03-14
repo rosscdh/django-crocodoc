@@ -41,7 +41,6 @@ class CrocodocService(object):
 
             except Exception as e:
                 logger.error('CrocodocAttachmentService.uuid: Failed to Generate uuid')
-                raise e
 
             crocodoc_data = self.attachment.data.get('crocodoc', {})
 
