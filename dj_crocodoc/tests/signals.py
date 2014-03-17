@@ -61,7 +61,6 @@ def _ensure_object_has_correct_values(clazz, obj):
     used in all tests below
     """
     clazz.assertEqual(obj.content_object_type, ContentType.objects.get(model='fakedocumentobject', app_label='tests'))
-    clazz.assertEqual(obj.object_id, 1)
     clazz.assertEqual(obj.object_attachment_fieldname, 'my_document_field')
     clazz.assertEqual(type(obj.source_object), FakeDocumentObject)  # should return the base object that created the request
 
