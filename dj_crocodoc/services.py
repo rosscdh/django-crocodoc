@@ -47,6 +47,7 @@ class CrocodocWebhookService(object):
 
     def process(self):
         page = None
+        processed = []
 
         for c, i in enumerate(self.items):
 
@@ -59,7 +60,6 @@ class CrocodocWebhookService(object):
             logger.info("{event} is of type {event_type} on page: {page}".format(event_type=event_type,
                                                                                  event=event,
                                                                                  page=page))
-
             if event == 'comment.create':
                 i = CrocodocCommentCreateEvent(page=page, **i)
 
@@ -83,7 +83,9 @@ class CrocodocWebhookService(object):
                 elif event_type == 'point':
                     i = CrocodocAnnotationPointEvent(**i)
 
-            return i.process(sender=self) if hasattr(i, 'process') else None
+            processed.append(i.process(sender=self) if hasattr(i, 'process') else None)
+
+        return processed
 
 
 class CrocodocBaseEvent(Bunch):
@@ -147,12 +149,16 @@ class CrocodocBaseEvent(Bunch):
             #
             filename = getattr(target, document.object_attachment_fieldname, 'attachment').name
 
+            user_pk, user_name = self.owner.split(',')  # crocodoc provides as pk,name
+
             self.signal.send(sender=sender,
                              verb=self.verb,
                              document=document,
                              target=target,
-                             attachment_name=filename)
-                             #**self.toDict())
+                             attachment_name=filename,
+                             user_info=(int(user_pk), user_name),
+                             crocodoc_event=self.event)
+
             logger.info('Send signal: {signal} {verb}'.format(signal=self.signal.__class__.__name__, verb=self.verb))
             return True
 
@@ -162,39 +168,39 @@ class CrocodocBaseEvent(Bunch):
 
 class CrocodocCommentCreateEvent(CrocodocBaseEvent):
     signal = crocodoc_signals.crocodoc_comment_create
-    _verb = 'Commented on an Document'
+    _verb = 'Commented on a Document'
 
 
 class CrocodocCommentDeleteEvent(CrocodocBaseEvent):
     signal = crocodoc_signals.crocodoc_comment_delete
-    _verb = 'Deleted a Commented on an Document'
+    _verb = 'Deleted a Commented on a Document'
 
 
 class CrocodocAnnotationHighlightEvent(CrocodocBaseEvent):
     signal = crocodoc_signals.crocodoc_annotation_highlight
-    _verb = 'Hilighted some text on an Document'
-    _deleted_verb = 'Deleted a Hilighted of some text on an Document'
+    _verb = 'Hilighted some text on a Document'
+    _deleted_verb = 'Deleted a Hilighted of some text on a Document'
 
 
 class CrocodocAnnotationStrikeoutEvent(CrocodocBaseEvent):
     signal = crocodoc_signals.crocodoc_annotation_strikeout
-    _verb = 'Struck out some text on an Document'
-    _deleted_verb = 'Deleted the Strikeout of some text on an Document'
+    _verb = 'Struck out some text on a Document'
+    _deleted_verb = 'Deleted the Strikeout of some text on a Document'
 
 
 class CrocodocAnnotationTextboxEvent(CrocodocBaseEvent):
     signal = crocodoc_signals.crocodoc_annotation_textbox
-    _verb = 'Added a text element on an Document'
-    _deleted_verb = 'Deleted a text element on an Document'
+    _verb = 'Added a text element on a Document'
+    _deleted_verb = 'Deleted a text element on a Document'
 
 
 class CrocodocAnnotationDrawingEvent(CrocodocBaseEvent):
     signal = crocodoc_signals.crocodoc_annotation_drawing
-    _verb = 'Added a drawing element on an Document'
-    _deleted_verb = 'Deleted a drawing element on an Document'
+    _verb = 'Added a drawing element on a Document'
+    _deleted_verb = 'Deleted a drawing element on a Document'
 
 
 class CrocodocAnnotationPointEvent(CrocodocBaseEvent):
     signal = crocodoc_signals.crocodoc_annotation_point
     _verb = 'Added a point element to a Document'
-    _deleted_verb = 'Deleted a point element on an Document'
+    _deleted_verb = 'Deleted a point element on a Document'

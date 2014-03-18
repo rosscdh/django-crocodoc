@@ -24,7 +24,7 @@ class CrocdocCallbackView(JSONResponseMixin, View):
     def post(self, request, *args, **kwargs):
         service = CrocodocWebhookService(payload=request.POST.get('payload', '[]'))
 
-        logger.info('recived crocdoc webhook: {json}'.format(json=service.items))
+        logger.info('recieved crocdoc webhook: {json}'.format(json=service.items))
 
         """
         status: payload
