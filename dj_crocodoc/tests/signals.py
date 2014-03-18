@@ -17,6 +17,8 @@ from django.test import TestCase, Client
 from django.core.urlresolvers import reverse
 from django.contrib.contenttypes.models import ContentType
 
+from model_mommy import mommy
+
 from ..services import CrocoDocConnectService
 
 from .models import FakeDocumentObject
@@ -73,6 +75,13 @@ class BaseContentProvider(TestCase):
         #
         # Create Test document
         #
+        self.user = mommy.make('auth.User',
+                               pk=1,  # set pk based on the data.CROCODOC_COMMENT_CREATE 1,Ross C
+                               username='CrocoDoc webhook User',
+                               first_name='Ross',
+                               last_name='C',
+                               email='crocodoc@lawpal.com')
+
         self.attachment = FakeDocumentObject.objects.create(my_document_field='')
 
         ctype = ContentType.objects.get(model=self.attachment.__class__.__name__.lower(), app_label='tests')
@@ -87,6 +96,7 @@ class WebhookTest(BaseContentProvider):
     Test the basic webhook callbacks (emulate a POST form crocodoc)
     """
     endpoint = reverse('crocodoc_webhook_callback')
+    EXPECTED_KEYS = ['target', 'crocodoc_event', 'signal', 'user_info', 'verb', 'attachment_name', 'document', 'sender']
 
     def send(self, data):
         """
@@ -97,18 +107,18 @@ class WebhookTest(BaseContentProvider):
 
     def test_comment_create(self):
         resp = self.send(data=crocodoc_data.CROCODOC_COMMENT_CREATE)
-        self.assertEqual(cache.get('test_crocodoc_webhook_event_recieved'), ['target', 'signal', 'verb', 'attachment_name', 'document', 'sender'])
-        self.assertEqual(json.loads(resp.content), {"details": True})
+        self.assertEqual(cache.get('test_crocodoc_webhook_event_recieved'), self.EXPECTED_KEYS)
+        self.assertEqual(json.loads(resp.content), {"details": [True, True]})
 
     def test_annotation_highlight(self):
         resp = self.send(data=crocodoc_data.CROCODOC_ANNOTATION_HIGHLIGHT)
-        self.assertEqual(cache.get('test_crocodoc_webhook_event_recieved'), ['target', 'signal', 'verb', 'attachment_name', 'document', 'sender'])
-        self.assertEqual(json.loads(resp.content), {"details": True})
+        self.assertEqual(cache.get('test_crocodoc_webhook_event_recieved'), self.EXPECTED_KEYS)
+        self.assertEqual(json.loads(resp.content), {"details": [True]})
 
     def test_annotation_textbox(self):
         resp = self.send(data=crocodoc_data.CROCODOC_ANNOTATION_TEXTBOX)
-        self.assertEqual(cache.get('test_crocodoc_webhook_event_recieved'), ['target', 'signal', 'verb', 'attachment_name', 'document', 'sender'])
-        self.assertEqual(json.loads(resp.content), {"details": True})
+        self.assertEqual(cache.get('test_crocodoc_webhook_event_recieved'), self.EXPECTED_KEYS)
+        self.assertEqual(json.loads(resp.content), {"details": [True]})
 
 
 class IncomingSignalTest(TestCase):
