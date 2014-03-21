@@ -63,6 +63,9 @@ class CrocodocWebhookService(object):
             if event == 'comment.create':
                 i = CrocodocCommentCreateEvent(page=page, **i)
 
+            if event == 'comment.update':
+                i = CrocodocCommentReplyEvent(page=page, **i)
+
             elif event == 'comment.delete':
                 i = CrocodocCommentDeleteEvent(**i)
 
@@ -170,6 +173,11 @@ class CrocodocBaseEvent(Bunch):
 class CrocodocCommentCreateEvent(CrocodocBaseEvent):
     signal = crocodoc_signals.crocodoc_comment_create
     _verb = 'Commented on a Document'
+
+
+class CrocodocCommentReplyEvent(CrocodocBaseEvent):
+    signal = crocodoc_signals.crocodoc_comment_update
+    _verb = 'Replied to a comment on a Document'
 
 
 class CrocodocCommentDeleteEvent(CrocodocBaseEvent):
