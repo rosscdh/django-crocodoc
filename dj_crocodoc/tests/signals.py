@@ -96,7 +96,7 @@ class WebhookTest(BaseContentProvider):
     Test the basic webhook callbacks (emulate a POST form crocodoc)
     """
     endpoint = reverse('crocodoc_webhook_callback')
-    EXPECTED_KEYS = ['target', 'crocodoc_event', 'signal', 'user_info', 'verb', 'attachment_name', 'document', 'sender']
+    EXPECTED_KEYS = ['target', 'crocodoc_event', 'signal', 'content', 'user_info', 'verb', 'attachment_name', 'document', 'sender']
 
     def send(self, data):
         """
