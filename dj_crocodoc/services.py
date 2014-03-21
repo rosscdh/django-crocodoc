@@ -157,7 +157,8 @@ class CrocodocBaseEvent(Bunch):
                              target=target,
                              attachment_name=filename,
                              user_info=(int(user_pk), user_name),
-                             crocodoc_event=self.event)
+                             crocodoc_event=self.event,
+                             content=self.content)
 
             logger.info('Send signal: {signal} {verb}'.format(signal=self.signal.__class__.__name__, verb=self.verb))
             return True
