@@ -13,6 +13,7 @@ send_to_crocodoc = Signal(providing_args=['document_object', 'app_label', 'field
 # Outgoing Events
 #
 crocodoc_comment_create = Signal(providing_args=['verb', 'document', 'target', 'attachment_name', 'user_info', 'crocodoc_event', 'content'])
+crocodoc_comment_update = Signal(providing_args=['verb', 'document', 'target', 'attachment_name', 'user_info', 'crocodoc_event', 'content'])
 crocodoc_comment_delete = Signal(providing_args=['verb', 'document', 'target', 'attachment_name', 'user_info', 'crocodoc_event', 'content'])
 crocodoc_annotation_highlight = Signal(providing_args=['verb', 'document', 'target', 'attachment_name', 'user_info', 'crocodoc_event', 'content'])
 crocodoc_annotation_strikeout = Signal(providing_args=['verb', 'document', 'target', 'attachment_name', 'user_info', 'crocodoc_event', 'content'])
