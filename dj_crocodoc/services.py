@@ -33,7 +33,10 @@ class CrocoDocConnectService(object):
                                                                        object_attachment_fieldname=field_name)
         if upload in [True, 'true', 1, '1']:
             # cause an upload to happen
-            self.obj.crocodoc_service.uuid
+            self.generate()
+
+    def generate(self):
+        self.obj.crocodoc_service.uuid
 
 
 
