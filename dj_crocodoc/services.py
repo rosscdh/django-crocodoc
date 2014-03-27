@@ -20,6 +20,7 @@ class CrocoDocConnectService(object):
 
     def __init__(self, document_object, app_label, field_name='attachment', **kwargs):
         upload = kwargs.get('upload_immediately', False)
+        reviewer = kwargs.get('reviewer', None)
         #
         # Get the content_type of the passed in model
         #
@@ -30,7 +31,8 @@ class CrocoDocConnectService(object):
         #
         self.obj, self.is_new = CrocodocDocument.objects.get_or_create(content_object_type=content_type,
                                                                        object_id=document_object.pk,
-                                                                       object_attachment_fieldname=field_name)
+                                                                       object_attachment_fieldname=field_name,
+                                                                       reviewer=reviewer)
         if upload in [True, 'true', 1, '1']:
             # cause an upload to happen
             self.generate()
