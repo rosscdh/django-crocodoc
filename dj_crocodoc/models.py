@@ -16,6 +16,8 @@ class CrocodocDocument(models.Model):
     object_id = models.IntegerField(db_index=True)
     # used to specify the name of the FileField
     object_attachment_fieldname = models.CharField(max_length=255, default='attachment')
+    # non required connected reviewer user
+    reviewer = models.ForeignKey('auth.User', null=True, blank=True)
     # misc data
     data = JSONField(default={}, blank=True, null=True)
 
