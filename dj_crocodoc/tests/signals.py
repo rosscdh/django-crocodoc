@@ -8,13 +8,11 @@ Webhook signals
 import sys;
 reload(sys);
 sys.setdefaultencoding("utf8")
-
-from django.conf import settings
 from django.core.files import File
 from django.core.cache import cache
 from django.dispatch import receiver
 from django.test import TestCase, Client
-from django.core.urlresolvers import reverse
+from django.core.urlresolvers import reverse_lazy
 from django.contrib.contenttypes.models import ContentType
 
 from model_mommy import mommy
@@ -95,7 +93,7 @@ class WebhookTest(BaseContentProvider):
     """
     Test the basic webhook callbacks (emulate a POST form crocodoc)
     """
-    endpoint = reverse('crocodoc_webhook_callback')
+    endpoint = reverse_lazy('crocodoc_webhook_callback')
     EXPECTED_KEYS = ['target', 'crocodoc_event', 'signal', 'content', 'user_info', 'verb', 'attachment_name', 'document', 'sender']
 
     def send(self, data):
