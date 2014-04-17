@@ -27,6 +27,10 @@ class CrocodocDocument(models.Model):
     def crocodoc_uuid(self):
         return self.data.get('crocodoc', {}).get('uuid')
 
+    @crocodoc_uuid.setter
+    def crocodoc_uuid(self, value):
+        self.data['crocodoc']['uuid'] = value
+
     def get_url(self):
         """
         Return the local name of the object as it will probably be downloaded from there
