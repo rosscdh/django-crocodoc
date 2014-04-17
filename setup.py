@@ -12,7 +12,7 @@ def read(fname):
 setup(
     name = "django-crocodoc",
     description = ("Django app for integrating with CrocoDoc"),
-    version = "0.1.0",
+    version = "0.1.1",
     author = "Ross Crawford-d'Heureuse",
     author_email = "ross@lawpal.com",
     license = "MIT",
