@@ -4,4 +4,10 @@ from django.contrib import admin
 from .models import CrocodocDocument
 
 
-admin.site.register([CrocodocDocument])
+class CrocodocDocumentAdmin(admin.ModelAdmin):
+    list_display = ('uuid',)
+    list_filter = ('content_object_type',)
+    search_fields = ('uuid',)
+
+
+admin.site.register(CrocodocDocument, CrocodocDocumentAdmin)

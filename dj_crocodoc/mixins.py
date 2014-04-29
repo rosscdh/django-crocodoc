@@ -31,31 +31,24 @@ class CrocodocService(object):
         Calling this property will initiate an upload of the doc,
         if it has not already been uploaded (i.e. we have a crocodoc uuid in the json data)
         """
-        crocodoc_uuid = self.attachment.crocodoc_uuid
-
-        if crocodoc_uuid is None:
+        if self.attachment.uuid is None:
 
             try:
                 crocodoc_uuid = self.upload_document()
                 logger.info('CrocodocAttachmentService.uuid: {uuid}'.format(uuid=crocodoc_uuid))
+                self.attachment.uuid = crocodoc_uuid
+                self.attachment.save(update_fields=['uuid'])
 
             except Exception as e:
-                logger.error('CrocodocAttachmentService.uuid: Failed to Generate uuid: %s' % e)
+                logger.critical('CrocodocAttachmentService.uuid: Failed to Generate uuid: %s' % e)
+                raise e
 
-            crocodoc_data = self.attachment.data.get('crocodoc', {})
-
-            crocodoc_data['uuid'] = crocodoc_uuid
-            self.attachment.uuid = crocodoc_uuid
-
-            self.attachment.data['crocodoc'] = crocodoc_data
-            self.attachment.save(update_fields=['uuid', 'data'])
-
-        return crocodoc_uuid
+        return self.attachment.uuid
 
     def session_key(self, **kwargs):
         #if self.session is None:
         if 1:
-            self.session = CROCODOC_BASE_SERVICE.session.create(self.uuid, **kwargs)
+            self.session = CROCODOC_BASE_SERVICE.session.create(str(self.uuid), **kwargs)
             logger.info('Session start:crocodoc: {session}'.format(session=self.session))
         return self.session
 
@@ -106,4 +99,4 @@ class CrocodocService(object):
 
     def process(self):
         logger.info('Start CrocodocAttachmentService.process')
-        return self.uuid
+        return str(self.uuid)

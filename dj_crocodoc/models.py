@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.db import models
-from django.contrib.contenttypes.models import ContentType
 
-from mixins import CrocodocService
+from .mixins import CrocodocService
 
 from uuidfield import UUIDField
 from jsonfield import JSONField
@@ -23,14 +22,6 @@ class CrocodocDocument(models.Model):
 
     _crocodoc_service = None
 
-    @property
-    def crocodoc_uuid(self):
-        return self.data.get('crocodoc', {}).get('uuid')
-
-    @crocodoc_uuid.setter
-    def crocodoc_uuid(self, value):
-        self.data['crocodoc']['uuid'] = value
-
     def get_url(self):
         """
         Return the local name of the object as it will probably be downloaded from there
@@ -43,7 +34,9 @@ class CrocodocDocument(models.Model):
             #
             # Pass in the source object with the attachment field
             #
-            self._crocodoc_service = CrocodocService(attachment=self, source_object=self.source_object, attachment_field_name=self.object_attachment_fieldname)
+            self._crocodoc_service = CrocodocService(attachment=self,
+                                                     source_object=self.source_object,
+                                                     attachment_field_name=self.object_attachment_fieldname)
         return self._crocodoc_service
 
     @property
