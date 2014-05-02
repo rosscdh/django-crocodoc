@@ -41,7 +41,7 @@ class CrocodocService(object):
 
             except Exception as e:
                 logger.critical('CrocodocAttachmentService.uuid: Failed to Generate uuid: %s' % e)
-                raise e
+                # raise e
 
         return self.attachment.uuid
 
