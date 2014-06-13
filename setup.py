@@ -19,7 +19,6 @@ setup(
     license = "MIT",
     keywords = "django crocdoc app",
     url = "https://github.com/rosscdh/django-crocodoc",
-    packages=['dj_crocodoc'],
     install_requires = [
         'crocodoc',
         'django-braces',
