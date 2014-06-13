@@ -46,10 +46,8 @@ class CrocodocService(object):
         return self.attachment.uuid
 
     def session_key(self, **kwargs):
-        #if self.session is None:
-        if 1:
-            self.session = CROCODOC_BASE_SERVICE.session.create(str(self.uuid), **kwargs)
-            logger.info('Session start:crocodoc: {session}'.format(session=self.session))
+        self.session = CROCODOC_BASE_SERVICE.session.create(str(self.uuid), **kwargs)
+        logger.info('Session start:crocodoc: {session}'.format(session=self.session))
         return self.session
 
     def upload_document(self):

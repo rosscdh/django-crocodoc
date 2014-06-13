@@ -11,6 +11,7 @@ def read(fname):
 
 setup(
     name = "django-crocodoc",
+    packages=['dj_crocodoc'],
     description = ("Django app for integrating with CrocoDoc"),
     version = "0.1.1",
     author = "Ross Crawford-d'Heureuse",
