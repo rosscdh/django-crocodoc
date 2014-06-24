@@ -33,15 +33,14 @@ class CrocodocService(object):
         """
         if self.attachment.uuid is None:
 
-            try:
-                crocodoc_uuid = self.upload_document()
+            crocodoc_uuid = self.upload_document()
+            if crocodoc_uuid is None:
+                raise Exception('Could not upload document to Crocodoc')
+
+            else:
                 logger.info('CrocodocAttachmentService.uuid: {uuid}'.format(uuid=crocodoc_uuid))
                 self.attachment.uuid = crocodoc_uuid
                 self.attachment.save(update_fields=['uuid'])
-
-            except Exception as e:
-                logger.critical('CrocodocAttachmentService.uuid: Failed to Generate uuid: %s' % e)
-                # raise e
 
         return self.attachment.uuid
 
@@ -65,13 +64,15 @@ class CrocodocService(object):
             #
             return CROCODOC_BASE_SERVICE.document.upload(url=url)
 
-        except ValidationError, e:
+        except ValidationError:
             #
             # was not a url is a patch
             #
             logger.info('Upload file to crocodoc: {url}'.format(url=url))
             #return CROCODOC_BASE_SERVICE.document.upload(file=codecs.open(url, mode='r', encoding="ISO8859-1"))
             return CROCODOC_BASE_SERVICE.document.upload(file=default_storage.open(url))
+        else:
+            return None
 
         
 
