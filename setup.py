@@ -13,7 +13,7 @@ setup(
     name = "django-crocodoc",
     packages=['dj_crocodoc'],
     description = ("Django app for integrating with CrocoDoc"),
-    version = "0.1.2",
+    version = "0.1.3",
     author = "Ross Crawford-d'Heureuse",
     author_email = "ross@lawpal.com",
     license = "MIT",
