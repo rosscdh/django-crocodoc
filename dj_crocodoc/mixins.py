@@ -69,12 +69,19 @@ class CrocodocService(object):
             # was not a url is a patch
             #
             logger.info('Upload file to crocodoc: {url}'.format(url=url))
-            #return CROCODOC_BASE_SERVICE.document.upload(file=codecs.open(url, mode='r', encoding="ISO8859-1"))
             return CROCODOC_BASE_SERVICE.document.upload(file=default_storage.open(url))
         else:
             return None
 
-        
+    def download_pdf_file(self):
+        """
+        https://github.com/crocodoc/crocodoc-python
+        To download a document, use crocodoc.download.document(). Pass in the 
+        uuid, an optional boolean of whether or not the file should be downloaded
+        as a PDF, an optional boolean or whether or not the file should be annotated,
+        and an optional filter string. This function returns the file contents as a string, which you probably want to save to a file.
+        """
+        return CROCODOC_BASE_SERVICE.download.document(uuid=self.attachment.uuid, pdf=True, annotated=False, user_filter='all')
 
     def view_url(self, **kwargs):
         """

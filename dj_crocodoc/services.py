@@ -40,6 +40,9 @@ class CrocoDocConnectService(object):
     def generate(self):
         self.obj.crocodoc_service.uuid
 
+    def download_pdf_file(self):
+        return self.obj.crocodoc_service.download_pdf_file()
+
 
 
 class CrocodocWebhookService(object):
