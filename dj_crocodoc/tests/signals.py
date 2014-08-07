@@ -94,7 +94,7 @@ class WebhookTest(BaseContentProvider):
     Test the basic webhook callbacks (emulate a POST form crocodoc)
     """
     endpoint = reverse_lazy('crocodoc_webhook_callback')
-    EXPECTED_KEYS = ['target', 'crocodoc_event', 'signal', 'content', 'user_info', 'verb', 'attachment_name', 'document', 'sender']
+    EXPECTED_KEYS = ['target', 'crocodoc_event', 'signal', 'uuid', 'content', 'user_info', 'verb', 'attachment_name', 'document', 'sender']
 
     def send(self, data):
         """
@@ -105,17 +105,17 @@ class WebhookTest(BaseContentProvider):
 
     def test_comment_create(self):
         resp = self.send(data=crocodoc_data.CROCODOC_COMMENT_CREATE)
-        self.assertEqual(cache.get('test_crocodoc_webhook_event_recieved'), self.EXPECTED_KEYS)
+        self.assertItemsEqual(cache.get('test_crocodoc_webhook_event_recieved'), self.EXPECTED_KEYS)
         self.assertEqual(json.loads(resp.content), {"details": [True, True]})
 
     def test_annotation_highlight(self):
         resp = self.send(data=crocodoc_data.CROCODOC_ANNOTATION_HIGHLIGHT)
-        self.assertEqual(cache.get('test_crocodoc_webhook_event_recieved'), self.EXPECTED_KEYS)
+        self.assertItemsEqual(cache.get('test_crocodoc_webhook_event_recieved'), self.EXPECTED_KEYS)
         self.assertEqual(json.loads(resp.content), {"details": [True]})
 
     def test_annotation_textbox(self):
         resp = self.send(data=crocodoc_data.CROCODOC_ANNOTATION_TEXTBOX)
-        self.assertEqual(cache.get('test_crocodoc_webhook_event_recieved'), self.EXPECTED_KEYS)
+        self.assertItemsEqual(cache.get('test_crocodoc_webhook_event_recieved'), self.EXPECTED_KEYS)
         self.assertEqual(json.loads(resp.content), {"details": [True]})
 
 
